@@ -1,0 +1,9 @@
+.idea
+*.p
+*.pickle
+*.dat
+*.inf
+*.fft
+./groupmtg
+./HD269582
+__pycache__
