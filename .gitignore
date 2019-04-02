@@ -4,6 +4,6 @@
 *.dat
 *.inf
 *.fft
-groupmtg
-HD269582
+**/groupmtg
+**/HD269582
 __pycache__
