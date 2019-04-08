@@ -30,7 +30,8 @@ freqs = freqs[range(int(N/2))]
 powers = powers[range(int(N/2))]
 
 plt.figure()
-plt.scatter(freqs[1:], powers[1:], marker='o', s=1.5, color='k', alpha=0.5)
+#plt.scatter(freqs[1:], powers[1:], marker='o', s=1.5, color='k', alpha=0.5)
+plt.plot(freqs[1:], powers[1:])
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Normalized Power')
 plt.title('FFT Plot for file '+filename)

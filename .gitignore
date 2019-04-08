@@ -4,6 +4,7 @@
 *.dat
 *.inf
 *.fft
+*.fits
 **/groupmtg
 **/HD269582
 __pycache__

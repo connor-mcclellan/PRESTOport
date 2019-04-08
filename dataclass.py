@@ -1,7 +1,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord as sc
-from astropy.table import Table
+from astropy.table import Table, vstack
 from astropy.utils.console import ProgressBar
 from matplotlib import pyplot as plt
 from scipy.stats import chisquare
@@ -20,7 +20,7 @@ class Star(object):
     def __init__(self, starfile):
         self.filename = os.path.abspath(starfile)
         self.datapath = os.path.dirname(os.path.abspath(starfile))+'/'
-        self.id = self.filename.split('/')[-1].split('-')[2][8:]
+#        self.id = self.filename.split('/')[-1].split('-')[2][8:]
         self.get_data()
         self.filtered = False
 
@@ -41,6 +41,7 @@ class Star(object):
 
             self.ra = hdulist[1].header['RA_OBJ']
             self.dec = hdulist[1].header['DEC_OBJ']
+            self.id = str(hdulist[0].header['TICID'])
 
             self.exposure_time = hdulist[1].header['TIMEDEL'] # days
 
@@ -66,6 +67,22 @@ class Star(object):
             diff = np.absolute(sorted[i] - sorted[i+1])
             delta_t_list.append(diff)
         return np.array(delta_t_list)
+
+
+    def combine(self, *args):
+        """
+        Combine one star object's data with another (or several other) star 
+        object's data.
+        """
+        arglist = [arg.data for arg in args]
+        arglist.insert(0, self.data)
+        self.data = vstack([argdata for argdata in arglist])
+        self.data.sort('bjd')
+
+        self.flux = self.data['flux']
+        self.err = self.data['err']
+        self.bjd = self.data['bjd']
+        self.flags = self.data['flags']
 
 
     def filter(self, tolerance=0.1):
@@ -188,22 +205,17 @@ class Star(object):
         return nights
 
 
-    def export(self, path='', rescale=True):
+    def export(self, filename=None):
         
-        if rescale:
-            flux = self.data['flux']*10e6
-            zero_loc = np.where(flux == 0.)
-            nonzero_loc = np.where(flux != 0.)
-            median = np.median(flux[nonzero_loc])
-            flux[zero_loc] = median
-            flux.astype(np.float32).tofile(path+str(self.id)+'.dat')
-        else:
-            flux = self.data['flux']
-            zero_loc = np.where(flux == 0.)
-            nonzero_loc = np.where(flux != 0.)
-            median = np.median(flux[nonzero_loc])
-            flux[zero_loc] = median
-            flux.astype(np.float32).tofile(path+str(self.id)+'.dat')
+        if filename is None:
+            filename = str(self.id)+'.dat'
+
+        flux = self.data['flux']*10e6 # RESCALE
+        zero_loc = np.where(flux == 0.)
+        nonzero_loc = np.where(flux != 0.)
+        median = np.median(flux[nonzero_loc])
+        flux[zero_loc] = median
+        flux.astype(np.float32).tofile(filename)
 
         descriptors = np.array([' Data file name without suffix          =  ',
                                 ' Telescope used                         =  ',
