@@ -240,7 +240,7 @@ class Star(object):
 
         values = np.array([str(self.id), 'TESS', 'unset', str(self.id), self.ra_hms, self.dec_dms, 'unset', str(np.min(self.data['bjd'])), '0', str(len(self.flux)), '120', '0', 'Optical', 'Other', '180.00', '500.0', '400.0', 'unset', '', ''], dtype=str)
         inf = np.core.defchararray.add(descriptors, values)
-        np.savetxt(path+str(self.id)+'.inf', inf, fmt='%s')
+        np.savetxt(filename+str(self.id)+'.inf', inf, fmt='%s')
 
 if __name__ == '__main__':
     pass
