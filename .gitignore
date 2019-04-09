@@ -7,4 +7,6 @@
 *.fits
 **/groupmtg
 **/HD269582
+**/injected_3day
+**/rebinjected_3day
 __pycache__
