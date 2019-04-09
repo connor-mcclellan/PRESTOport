@@ -208,7 +208,7 @@ class Star(object):
     def export(self, filename=None):
         
         if filename is None:
-            filename = str(self.id)+'.dat'
+            filename = str(self.id)
         else:
             filename = filename.split('.')[0]
 

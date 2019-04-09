@@ -8,5 +8,7 @@
 **/groupmtg
 **/HD269582
 **/injected_3day
+**/injected_3hr
+**/rebinjected_3hr
 **/rebinjected_3day
 __pycache__
