@@ -209,13 +209,15 @@ class Star(object):
         
         if filename is None:
             filename = str(self.id)+'.dat'
+        else:
+            filename = filename.split('.')[0]
 
         flux = self.data['flux']*10e6 # RESCALE
         zero_loc = np.where(flux == 0.)
         nonzero_loc = np.where(flux != 0.)
         median = np.median(flux[nonzero_loc])
         flux[zero_loc] = median
-        flux.astype(np.float32).tofile(filename)
+        flux.astype(np.float32).tofile(filename+'.dat')
 
         descriptors = np.array([' Data file name without suffix          =  ',
                                 ' Telescope used                         =  ',
@@ -240,7 +242,7 @@ class Star(object):
 
         values = np.array([str(self.id), 'TESS', 'unset', str(self.id), self.ra_hms, self.dec_dms, 'unset', str(np.min(self.data['bjd'])), '0', str(len(self.flux)), '120', '0', 'Optical', 'Other', '180.00', '500.0', '400.0', 'unset', '', ''], dtype=str)
         inf = np.core.defchararray.add(descriptors, values)
-        np.savetxt(str(self.id)+'.inf', inf, fmt='%s')
+        np.savetxt(filename+'.inf', inf, fmt='%s')
 
 if __name__ == '__main__':
     pass
