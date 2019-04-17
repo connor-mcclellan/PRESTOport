@@ -124,6 +124,20 @@ class Star(object):
         self.flux = sumflux
 
 
+    def addnoise(self, amplitude, plot=False):
+        n = len(self.data['flux'])
+        noise = amplitude*np.random.random(n) - 0.5*amplitude
+        self.data['flux'] = self.data['flux'] + noise
+        self.flux = self.data['flux']
+
+        if plot:
+            plt.hist(noise)
+            plt.title('White noise added to flux points')
+            plt.xlabel('Flux (e-/s)')
+            plt.ylabel('n')
+            plt.show()
+
+
     def prepare(self):
 
         if self.filtered == False:
@@ -205,8 +219,13 @@ class Star(object):
         return nights
 
 
-    def export(self, filename=None):
+    def export(self, path=None, filename=None):
         
+        if path is None:
+            path = './'
+        elif path[-1] != '/':
+            path = path+'/'
+
         if filename is None:
             filename = str(self.id)
         else:
@@ -217,7 +236,7 @@ class Star(object):
         nonzero_loc = np.where(flux != 0.)
         median = np.median(flux[nonzero_loc])
         flux[zero_loc] = median
-        flux.astype(np.float32).tofile(filename+'.dat')
+        flux.astype(np.float32).tofile(path+filename+'.dat')
 
         descriptors = np.array([' Data file name without suffix          =  ',
                                 ' Telescope used                         =  ',
@@ -242,7 +261,7 @@ class Star(object):
 
         values = np.array([str(self.id), 'TESS', 'unset', str(self.id), self.ra_hms, self.dec_dms, 'unset', str(np.min(self.data['bjd'])), '0', str(len(self.flux)), '120', '0', 'Optical', 'Other', '180.00', '500.0', '400.0', 'unset', '', ''], dtype=str)
         inf = np.core.defchararray.add(descriptors, values)
-        np.savetxt(filename+'.inf', inf, fmt='%s')
+        np.savetxt(path+filename+'.inf', inf, fmt='%s')
 
 if __name__ == '__main__':
     pass
