@@ -6,6 +6,7 @@ from astropy.utils.console import ProgressBar
 from matplotlib import pyplot as plt
 from scipy.stats import chisquare
 from astropy.io import fits
+from utils import uconv
 import pickle
 import os
 import warnings
@@ -30,6 +31,7 @@ class Star(object):
         with fits.open(self.filename, mode='readonly') as hdulist:
             bjd = hdulist[1].data['TIME']
             bjd_nan_mask = np.isnan(bjd)
+            self.time_unit = u.Unit(hdulist[1].header['TIMEUNIT'])
 
             flux = hdulist[1].data['SAP_FLUX']
             flux_nan_mask = np.isnan(flux)
@@ -46,27 +48,29 @@ class Star(object):
             self.exposure_time = hdulist[1].header['TIMEDEL'] # days
 
         s = sc(ra=self.ra*u.degree, dec=self.dec*u.degree).to_string('hmsdms')
-        self.ra_hms = s.split(' ')[0].split('h')[0]+':'+s.split(' ')[0].split('h')[1].split('m')[0]+':'+s.split(' ')[0].split('m')[1].split('s')[0]
-        self.dec_dms = s.split(' ')[1].split('d')[0]+':'+s.split(' ')[1].split('d')[1].split('m')[0]+':'+s.split(' ')[1].split('m')[1].split('s')[0]
 
-        nan_mask = np.invert(np.logical_or(bjd_nan_mask, flux_nan_mask, err_nan_mask))
+        self.ra_hms = (s.split(' ')[0].split('h')[0]
+                      + ':' 
+                      + s.split(' ')[0].split('h')[1].split('m')[0]
+                      + ':'
+                      + s.split(' ')[0].split('m')[1].split('s')[0])
+
+        self.dec_dms = (s.split(' ')[1].split('d')[0]
+                       + ':' 
+                       + s.split(' ')[1].split('d')[1].split('m')[0]
+                       + ':'
+                       + s.split(' ')[1].split('m')[1].split('s')[0])
+
+        nan_mask = np.invert(np.logical_or(bjd_nan_mask, flux_nan_mask, 
+                                           err_nan_mask))
         
         self.bjd = bjd[nan_mask]
         self.flux = flux[nan_mask]
         self.err = err[nan_mask]
         self.flags = flags[nan_mask]
 
-        self.data = Table([self.bjd, self.flux, self.err, self.flags], names=['bjd', 'flux', 'err', 'flags'], masked=True)
-
-
-    def find_delta_t(self):
-        sorted = np.sort(self.data['bjd'])
-        print (sorted[-1]-sorted[0]), " day range of data"
-        delta_t_list = []
-        for i in range(len(sorted)-1):
-            diff = np.absolute(sorted[i] - sorted[i+1])
-            delta_t_list.append(diff)
-        return np.array(delta_t_list)
+        self.data = Table([self.bjd, self.flux, self.err, self.flags], 
+                          names=['bjd', 'flux', 'err', 'flags'], masked=True)
 
 
     def combine(self, *args):
@@ -167,38 +171,63 @@ class Star(object):
         print('Done!')
 
 
-    def chsq(self, plot=True, filename=None):
+    def plot(self, filename=None, chsq=True):
+        """
+        Plot the light curve.
 
-        x = np.linspace(0, len(self.data) - 1, len(self.data))
+        Parameters
+        ----------
+        filename : str, optional
+            The filename of the pickled matplotlib figure to save. If not 
+            provided, the figure will be displayed without saving.
+        chsq : boolean, optional
+            If true, the light curve will be fitted to a 0-order polynomial
+            to measure the reduced chi squared. This is intended to be a 
+            measure of how variable or non-variable the light curve is.
 
-        z = np.polyfit(x, self.data['flux'], 1)
-        chsq = np.sum(((self.data['flux'] - np.polyval(z, x)) ** 2.)/self.data['err']**2.)/(len(self.data)-1)
-        p = np.poly1d(z)
+        Returns
+        -------
+        None : None
+            None is returned if chsq is set to False.
+        chsq : float
+            The reduced chi squared of the light curve, if chsq is set to True.
+        """
 
-        if plot:
-            fig = plt.figure(figsize=[10,4])
-            ax = fig.add_subplot(111)
-            ax.errorbar(self.data['bjd'], self.data['flux'], yerr=self.data['err'], ms=2, fmt='ko', elinewidth=.5, alpha=0.5)
+        
+        fig = plt.figure(figsize=[10,4])
+        ax = fig.add_subplot(111)
+        ax.errorbar(self.data['bjd'], self.data['flux'], alpha=0.5,
+                    yerr=self.data['err'], ms=2, fmt='ko', elinewidth=.5)
+
+        if chsq is True:
+            x = np.linspace(0, len(self.data) - 1, len(self.data))
+            z = np.polyfit(x, self.data['flux'], 1)
+
+            chsq = np.sum(((self.data['flux'] - np.polyval(z, x)) ** 2.)
+                          / self.data['err']**2.)/(len(self.data) - 1)
+            p = np.poly1d(z)
             ax.plot(self.data['bjd'], p(self.data['bjd']), 'b--')
-            ax.set_xlabel('BJD (Days)')
-            ax.set_ylabel('Flux (e-/s)')
-            ax.text(0.1, 0.9, "Reduced Chi Squared: {:.4f}".format(chsq), transform=ax.transAxes)
-            ax.set_title('ID: {}    Avg Brightness = {:.2f} e-/s'.format(str(self.id), np.mean(self.data['flux'])))
-            
-            if filename is not None:
-                pickle.dump(ax, open(filename, 'wb'))
-            else:
-                plt.show()
-                plt.close()
+            ax.text(0.1, 0.9, "Reduced Chi Squared: {:.4f}".format(chsq), 
+                    transform=ax.transAxes)
+
+        ax.set_xlabel('BJD (Days)')
+        ax.set_ylabel('Flux (e-/s)')
+        ax.set_title('ID: {}    Avg Brightness = {:.2f} e-/s'
+                     .format(str(self.id), np.mean(self.data['flux'])))
+        
+        if filename is not None:
+            pickle.dump(ax, open(filename, 'wb'))
         else:
-            pass
+            plt.show()
+            plt.close()
         
         return chsq
 
 
     def split_nights(self):
         """
-        Split a star's time series data by night of observation.
+        Split a star's time series data by night of observation. Intended for
+        use only with ground-based telescopes.
 
         Parameters
         ----------
@@ -206,7 +235,9 @@ class Star(object):
         
         Returns
         -------
-        List of astropy.table.Table objects
+        nights: list
+            List of astropy.table.Table objects, one for each night of 
+            observations.
         """
         bjds = np.array(list(self.data['bjd']))
         gaps = bjds[1:] - bjds[:-1] # Time between consecutive data points
@@ -219,24 +250,19 @@ class Star(object):
         return nights
 
 
-    def export(self, path=None, filename=None):
+    def export(self, filename=None):
         
-        if path is None:
-            path = './'
-        elif path[-1] != '/':
-            path = path+'/'
-
         if filename is None:
-            filename = str(self.id)
+            filename = './'+str(self.id)
         else:
-            filename = filename.split('.')[0]
+            filename = os.path.splitext(filename)[0]
 
         flux = self.data['flux']*10e6 # RESCALE
         zero_loc = np.where(flux == 0.)
         nonzero_loc = np.where(flux != 0.)
         median = np.median(flux[nonzero_loc])
         flux[zero_loc] = median
-        flux.astype(np.float32).tofile(path+filename+'.dat')
+        flux.astype(np.float32).tofile(filename+'.dat')
 
         descriptors = np.array([' Data file name without suffix          =  ',
                                 ' Telescope used                         =  ',
@@ -259,9 +285,17 @@ class Star(object):
                                 ' Any additional notes:',
                                 '   none'])
 
-        values = np.array([str(self.id), 'TESS', 'unset', str(self.id), self.ra_hms, self.dec_dms, 'unset', str(np.min(self.data['bjd'])), '0', str(len(self.flux)), '120', '0', 'Optical', 'Other', '180.00', '500.0', '400.0', 'unset', '', ''], dtype=str)
+        values = np.array([str(self.id), 'TESS', 'unset', str(self.id), 
+                           self.ra_hms, self.dec_dms, 'unset', 
+                           str(np.min(self.data['bjd'])), '0', 
+                           str(len(self.flux)), 
+                           (self.exposure_time*self.time_unit).to('s'),
+                           '0', 'Optical', 'Other', '180.00', '500.0', '400.0', 
+                           'unset', '', ''], 
+                          dtype=str)
+
         inf = np.core.defchararray.add(descriptors, values)
-        np.savetxt(path+filename+'.inf', inf, fmt='%s')
+        np.savetxt(filename+'.inf', inf, fmt='%s')
 
 if __name__ == '__main__':
     pass

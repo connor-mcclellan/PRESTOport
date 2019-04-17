@@ -21,7 +21,7 @@ from astropy.table import Table
 #
 #    timeseries - the original time series (time and flux)
 #
-#    exptime - the exposure time for all images taken
+#    exptime - the exposure time for each frame of the time series
 #
 #    timestamp_position - the position of the time stamp relative to the 
 #                         exposure
