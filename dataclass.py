@@ -7,10 +7,15 @@ from matplotlib import pyplot as plt
 from scipy.stats import chisquare
 from astropy.io import fits
 from utils import uconv
+from glob import glob
 import pickle
 import os
 import warnings
 from rebin import rebin
+
+
+class ArgumentError(ValueError):
+    pass
 
 
 class Star(object):
@@ -18,35 +23,41 @@ class Star(object):
     A class to handle individual stars from time series data.
     '''
 
-    def __init__(self, starfile):
-        self.filename = os.path.abspath(starfile)
-        self.datapath = os.path.dirname(os.path.abspath(starfile))+'/'
-#        self.id = self.filename.split('/')[-1].split('-')[2][8:]
+    def __init__(self, *args):
+
+        # See if argument should be handled by glob, or if it's one or more 
+        # complete filenames instead
+        check_wildcard = []
+        for arg in args:
+            check_wildcard.append('*' in arg)
+        wildcard = any(check_wildcard)
+
+        # If a wildcard is present, use glob to find matching filenames
+        if wildcard:
+            if len(args)==1:
+                self.filenames = glob(str(args[0]))
+                if len(self.filenames) == 0:
+                    raise ArgumentError('No filenames found!')
+            else:
+                raise ArgumentError('Too many arguments to use a wildcard.')
+        else:
+            self.filenames = [os.path.abspath(arg) for arg in args]
+
         self.get_data()
         self.filtered = False
 
 
     def get_data(self):
 
-        with fits.open(self.filename, mode='readonly') as hdulist:
-            bjd = hdulist[1].data['TIME']
-            bjd_nan_mask = np.isnan(bjd)
+        with fits.open(self.filenames[0], mode='readonly') as hdulist:
             self.time_unit = u.Unit(hdulist[1].header['TIMEUNIT'])
-
-            flux = hdulist[1].data['SAP_FLUX']
-            flux_nan_mask = np.isnan(flux)
-
-            err = hdulist[1].data['SAP_FLUX_ERR']
-            err_nan_mask = np.isnan(err)
-
-            flags = hdulist[1].data['QUALITY']
 
             self.ra = hdulist[1].header['RA_OBJ']
             self.dec = hdulist[1].header['DEC_OBJ']
             self.id = str(hdulist[0].header['TICID'])
 
             self.exposure_time = hdulist[1].header['TIMEDEL'] # days
-
+            
         s = sc(ra=self.ra*u.degree, dec=self.dec*u.degree).to_string('hmsdms')
 
         self.ra_hms = (s.split(' ')[0].split('h')[0]
@@ -61,22 +72,51 @@ class Star(object):
                        + ':'
                        + s.split(' ')[1].split('m')[1].split('s')[0])
 
-        nan_mask = np.invert(np.logical_or(bjd_nan_mask, flux_nan_mask, 
-                                           err_nan_mask))
-        
-        self.bjd = bjd[nan_mask]
-        self.flux = flux[nan_mask]
-        self.err = err[nan_mask]
-        self.flags = flags[nan_mask]
+        datalist = []
 
-        self.data = Table([self.bjd, self.flux, self.err, self.flags], 
-                          names=['bjd', 'flux', 'err', 'flags'], masked=True)
+        for filename in self.filenames:
+            with fits.open(filename, mode='readonly') as hdulist:
+
+                bjd = hdulist[1].data['TIME']
+                bjd_nans = np.isnan(bjd)
+
+                flux = hdulist[1].data['SAP_FLUX']
+                flux_nans = np.isnan(flux)
+
+                err = hdulist[1].data['SAP_FLUX_ERR']
+                err_nans = np.isnan(err)
+
+                flags = hdulist[1].data['QUALITY']
+
+                nan_mask = np.invert(np.logical_or(bjd_nans, flux_nans, 
+                                                   err_nans))
+        
+                data = Table([bjd[nan_mask], flux[nan_mask], err[nan_mask], 
+                              flags[nan_mask]], names=['bjd', 'flux', 'err', 
+                                                       'flags'], masked=True)                
+                datalist.append(data)
+
+        if len(datalist) > 1:
+            self.data = vstack([data for data in datalist])
+        else:
+            self.data = datalist[0]
+
+        self.data.sort('bjd')
+        self.flux = self.data['flux']
+        self.err = self.data['err']
+        self.bjd = self.data['bjd']
+        self.flags = self.data['flags']
+        
+        self.duration = ((self.data['bjd'][-1] - self.data['bjd'][0])
+                        * self.time_unit)
 
 
     def combine(self, *args):
         """
         Combine one star object's data with another (or several other) star 
         object's data.
+
+        NOW DEPRECATED
         """
         arglist = [arg.data for arg in args]
         arglist.insert(0, self.data)
