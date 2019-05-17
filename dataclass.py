@@ -110,25 +110,6 @@ class Star(object):
         self.duration = ((self.data['bjd'][-1] - self.data['bjd'][0])
                         * self.time_unit)
 
-
-    def combine(self, *args):
-        """
-        Combine one star object's data with another (or several other) star 
-        object's data.
-
-        NOW DEPRECATED
-        """
-        arglist = [arg.data for arg in args]
-        arglist.insert(0, self.data)
-        self.data = vstack([argdata for argdata in arglist])
-        self.data.sort('bjd')
-
-        self.flux = self.data['flux']
-        self.err = self.data['err']
-        self.bjd = self.data['bjd']
-        self.flags = self.data['flags']
-
-
     def filter(self, tolerance=0.1):
         # Filtering based on bad data flags (FOR TESS DATA ONLY)
         # Flags commented out of the list below are kept
@@ -294,6 +275,8 @@ class Star(object):
         
         if filename is None:
             filename = './'+str(self.id)
+        elif filename[-1] == '/':
+            filename = os.path.splitext(filename)[0]+str(self.id)
         else:
             filename = os.path.splitext(filename)[0]
 
