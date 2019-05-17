@@ -1,10 +1,10 @@
 .idea
 *.p
-*.pickle
-*.dat
-*.inf
+**/*.pickle
+**/*.dat
+**/*.inf
 *.fft
-*.fits
+**/*.fits
 __pycache__
 **/old
 .ipynb_checkpoints
