@@ -102,10 +102,6 @@ class Star(object):
             self.data = datalist[0]
 
         self.data.sort('bjd')
-        self.flux = self.data['flux']
-        self.err = self.data['err']
-        self.bjd = self.data['bjd']
-        self.flags = self.data['flags']
         
         self.duration = ((self.data['bjd'][-1] - self.data['bjd'][0])
                         * self.time_unit)
@@ -146,14 +142,12 @@ class Star(object):
 
         sumflux = np.array(self.data['flux']) + sinflux
         self.data['flux'] = sumflux
-        self.flux = sumflux
 
 
     def addnoise(self, amplitude, plot=False):
         n = len(self.data['flux'])
         noise = amplitude*np.random.random(n) - 0.5*amplitude
         self.data['flux'] = self.data['flux'] + noise
-        self.flux = self.data['flux']
 
         if plot:
             plt.hist(noise)
@@ -181,10 +175,6 @@ class Star(object):
         new_bjd = rebin_flux[:,0]
         new_flux = rebin_flux[:,1]
         new_err = rebin_err[:,1]
-
-        self.bjd = new_bjd
-        self.flux = new_flux
-        self.err = new_err
 
         self.data = Table([new_bjd, new_flux, new_err], 
                           names=['bjd', 'flux', 'err'])
@@ -311,7 +301,7 @@ class Star(object):
         values = np.array([str(self.id), 'TESS', 'unset', str(self.id), 
                            self.ra_hms, self.dec_dms, 'unset', 
                            str(np.min(self.data['bjd'])), '0', 
-                           str(len(self.flux)), 
+                           str(len(self.data['flux'])), 
                            (self.exposure_time*self.time_unit).to('s'),
                            '0', 'Optical', 'Other', '180.00', '500.0', '400.0', 
                            'unset', '', ''], 
