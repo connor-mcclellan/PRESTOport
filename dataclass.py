@@ -8,6 +8,7 @@ from scipy.stats import chisquare
 from astropy.io import fits
 from utils import uconv
 from glob import glob
+from copy import deepcopy
 import pickle
 import os
 import warnings
@@ -235,30 +236,23 @@ class Star(object):
         return chsq
 
 
-    def split_nights(self):
-        """
-        Split a star's time series data by night of observation. Intended for
-        use only with ground-based telescopes.
+    def split(self, n_part=None):
 
-        Parameters
-        ----------
-        None
-        
-        Returns
-        -------
-        nights: list
-            List of astropy.table.Table objects, one for each night of 
-            observations.
-        """
-        bjds = np.array(list(self.data['bjd']))
-        gaps = bjds[1:] - bjds[:-1] # Time between consecutive data points
-        gap_indices = np.where(gaps > 0.01)[0]
-
-        nights = [self.data[:gap_indices[0]]]
-        for i in range(1, len(gap_indices)-1):
-            nights.append(self.data[gap_indices[i]+1:gap_indices[i+1]])
-        nights.append(self.data[(gap_indices[-1]+1):])
-        return nights
+        if n_part is None:
+            print("n_part not specified, so no slices were made.")
+        elif n_part < 2:
+            print("n_part less than 2 is not valid. No slices were made.")
+        else:
+            slice_width = int(np.floor(len(self.data)/n_part))
+            
+            objs = [deepcopy(self) for i in range(n_part)]
+            for i in range(n_part):
+                if i == n_part-1:
+                    objs[i].data = objs[i].data[i*slice_width:]
+                else:
+                    objs[i].data = objs[i].data[i*slice_width:(i+1)*slice_width]
+                objs[i].id += '_{}'.format(i+1)
+            return objs
 
 
     def export(self, filename=None):
