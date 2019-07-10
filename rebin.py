@@ -43,7 +43,7 @@ def zipper(a, b):
 
 
 def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5, 
-          median_replace=True):
+          gapfill_type=0):
     """
     Rebin a time series into evenly-spaced bins, the number of which is a power
      of two for fast fourier transform compatibility.
@@ -66,9 +66,13 @@ def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5,
         0 - the time stamp is at the beginning of each exposure; 0.5 - the time
         stamp is in the middle of each exposure; 1 - the time stamp is at the
         end of each exposure.
-    median_replace : boolean, optional
-        If true, gaps in the timeseries will be replaced with the median flux
-        of all the data points.
+    gapfill_type : int, optional
+        Gaps in the timeseries can be replaced with the median flux of all the 
+        data points (Median), the median of the two nearest data points (Running
+        Median), or left at 0 flux (None).
+            0 - None (No gap replacement)
+            1 - Median
+            2 - Running Median
 
     Returns
     -------
@@ -115,13 +119,21 @@ def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5,
     
     # Find gaps in the timeseries
     gaps = starttimes[1:] - endtimes[:-1]
-    
-    # Median replace, if set to true. 
+
+    # If a gap is negligible, set it to 0
+    gaps[np.abs(gaps) < 1e-6] = 0.0    
+
     median_flux = np.median(flux)
-    if median_replace is True:
-        gaps = gaps*median_flux/exptime
-    else:
+
+    if gapfill_type == 0:
         gaps = gaps*0.
+
+    elif gapfill_type == 1:
+        gaps = gaps*median_flux/exptime
+
+    elif gapfill_type == 2:
+        local_medians = (flux[:-1] + flux[1:])/2.
+        gaps = gaps*local_medians/exptime
 
     # Inject gap replacements into original data
     flux = zipper(flux, gaps)
@@ -144,7 +156,15 @@ def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5,
     endbins = startbins + binwidth
 
     # Add final gap between last data point and end of the bins
-    flux = np.append(flux, (endbins[-1]-endtimes[-1])*median_flux/exptime)
+    if gapfill_type == 0:
+        flux = np.append(flux, 0)
+    
+    elif gapfill_type == 1:
+        flux = np.append(flux, (endbins[-1]-endtimes[-1])*median_flux/exptime)
+
+    elif gapfill_type == 2:
+        flux = np.append(flux, flux[-1])
+    
     starttimes = np.append(starttimes, endtimes[-1])
     endtimes = np.append(endtimes, endbins[-1])
 

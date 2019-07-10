@@ -167,11 +167,11 @@ class Star(object):
         print('Rebinning flux...')
         rebin_flux = rebin(self.data['bjd','flux'], binwidth=2./60./24., 
                            exptime=2./60./24., timestamp_position=0.5, 
-                           median_replace=True)
+                           gapfill_type=2)
         print('Rebinning error...')    
         rebin_err = rebin(self.data['bjd','err'], binwidth=2./60./24., 
                           exptime=2./60./24., timestamp_position=0.5, 
-                          median_replace=True)
+                          gapfill_type=2)
 
         new_bjd = rebin_flux[:,0]
         new_flux = rebin_flux[:,1]
