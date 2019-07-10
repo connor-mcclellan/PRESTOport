@@ -158,20 +158,26 @@ class Star(object):
             plt.show()
 
 
-    def prepare(self):
+    def prepare(self, gapfill_method=2):
 
         if self.filtered == False:
             print('Filtering data...')
             self.filter()
         
-        print('Rebinning flux...')
+        prompts = {
+            0: 'without replacing gaps',
+            1: 'using simple median replacement',
+            2: 'using running median replacement'
+        }
+
+        print('Rebinning flux {}...'.format(prompts[gapfill_method]))
         rebin_flux = rebin(self.data['bjd','flux'], binwidth=2./60./24., 
                            exptime=2./60./24., timestamp_position=0.5, 
-                           gapfill_type=2)
-        print('Rebinning error...')    
+                           gapfill_method=gapfill_method)
+        print('Rebinning error {}...'.format(prompts[gapfill_method]))    
         rebin_err = rebin(self.data['bjd','err'], binwidth=2./60./24., 
                           exptime=2./60./24., timestamp_position=0.5, 
-                          gapfill_type=2)
+                          gapfill_method=gapfill_method)
 
         new_bjd = rebin_flux[:,0]
         new_flux = rebin_flux[:,1]
@@ -250,7 +256,8 @@ class Star(object):
                 if i == n_part-1:
                     objs[i].data = objs[i].data[i*slice_width:]
                 else:
-                    objs[i].data = objs[i].data[i*slice_width:(i+1)*slice_width]
+                    objs[i].data = objs[i].data[i*slice_width:
+                                                (i+1)*slice_width]
                 objs[i].id += '_{}'.format(i+1)
             return objs
 

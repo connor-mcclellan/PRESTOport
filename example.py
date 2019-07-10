@@ -32,6 +32,7 @@ star = Star('./example/*.fits')
 
 star.filter()
 
+
 # PLOTTING
 # --------
 
@@ -50,14 +51,34 @@ star.filter()
 
 star.plot(filename='./example/example_plot.pickle')
 
+
 # BINNING
 # -------
 
 # The 'prepare' method rebins the flux and error, overwriting the object's
 # 'data' attribute. Afterwards, it is ready to be exported for analysis in 
-# PRESTO.
+# PRESTO. The types of gap filling methods available are:
+#            0 - None (No gap replacement)
+#            1 - Simple Median
+#            2 - Running Median
+#
+# Here we use Running Median (credit: A. Ali, 2019)
 
-star.prepare()
+star.prepare(gapfill_type=2)
+
+
+# SPLITTING TIME SERIES
+# ---------------------
+
+# You can also split a time series into parts, in case you want to take a 
+# closer look at a rapidly-evolving pulse profile in PRESTO. Do this after 
+# rebinning, so that the partitions are equal duration.
+
+s1, s2, s3, s4 = star.split(n_part=4)
+
+# These each become their own Star objects, which can be exported just like any 
+# other Star.
+
 
 # EXPORTING
 # ---------

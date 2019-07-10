@@ -43,7 +43,7 @@ def zipper(a, b):
 
 
 def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5, 
-          gapfill_type=0):
+          gapfill_method=0):
     """
     Rebin a time series into evenly-spaced bins, the number of which is a power
      of two for fast fourier transform compatibility.
@@ -66,12 +66,12 @@ def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5,
         0 - the time stamp is at the beginning of each exposure; 0.5 - the time
         stamp is in the middle of each exposure; 1 - the time stamp is at the
         end of each exposure.
-    gapfill_type : int, optional
+    gapfill_method : int, optional
         Gaps in the timeseries can be replaced with the median flux of all the 
-        data points (Median), the median of the two nearest data points (Running
-        Median), or left at 0 flux (None).
+        data points (Simple Median), the median of the two nearest data points 
+        (Running Median), or left at 0 flux (None).
             0 - None (No gap replacement)
-            1 - Median
+            1 - Simple Median
             2 - Running Median
 
     Returns
@@ -125,15 +125,18 @@ def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5,
 
     median_flux = np.median(flux)
 
-    if gapfill_type == 0:
+    if gapfill_method == 0:
         gaps = gaps*0.
 
-    elif gapfill_type == 1:
+    elif gapfill_method == 1:
         gaps = gaps*median_flux/exptime
 
-    elif gapfill_type == 2:
+    elif gapfill_method == 2:
         local_medians = (flux[:-1] + flux[1:])/2.
         gaps = gaps*local_medians/exptime
+    else:
+        raise ValueError("Unrecognized value for keyword argument "
+                         "'gapfill_method': {}".format(gapfill_method))
 
     # Inject gap replacements into original data
     flux = zipper(flux, gaps)
@@ -156,13 +159,13 @@ def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5,
     endbins = startbins + binwidth
 
     # Add final gap between last data point and end of the bins
-    if gapfill_type == 0:
+    if gapfill_method == 0:
         flux = np.append(flux, 0)
     
-    elif gapfill_type == 1:
+    elif gapfill_method == 1:
         flux = np.append(flux, (endbins[-1]-endtimes[-1])*median_flux/exptime)
 
-    elif gapfill_type == 2:
+    elif gapfill_method == 2:
         flux = np.append(flux, flux[-1])
     
     starttimes = np.append(starttimes, endtimes[-1])
