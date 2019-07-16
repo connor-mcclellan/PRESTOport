@@ -64,7 +64,7 @@ star.plot(filename='./example/example_plot.pickle')
 #
 # Here we use Running Median (credit: A. Ali, 2019)
 
-star.prepare(gapfill_type=2)
+star.prepare(gapfill_method=2)
 
 
 # SPLITTING TIME SERIES
