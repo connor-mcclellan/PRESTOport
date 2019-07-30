@@ -14,9 +14,8 @@ Introduction
 Setting up packages
 *******************
 
-FFTW 3.X
---------
-
+FFTW 3.X (From Source)
+----------------------
 
 .. note ::
 
@@ -27,9 +26,7 @@ FFTW 3.X
     on the basics of locating download links and installing packages.
 
 
-FFTW can be installed using ``apt-get`` in Ubuntu, but this wouldn't give us 
-control over the path to which it installs, nor the config flags used when 
-building. So, we will install it from a tarball that can be downloaded from the
+We will install FFTW from a tarball that can be downloaded from the
 FFTW website.
 
 1. Go to http://www.fftw.org/
@@ -53,20 +50,20 @@ FFTW website.
 
         user@machine:~$ wget http://www.fftw.org/fftw-3.3.8.tar.gz
 
-.. note::
+   .. note::
 
-    If Step 5 above spits out something like::
-        
-        wget: command not found
+       If Step 5 above spits out something like::
+            
+           wget: command not found
 
-    then ``wget`` isn't installed on your computer. It *should* come 
-    pre-installed for most distributions of Linux, but if it is not, install it
-    with ::
-        
-        user@machine:~$ sudo apt-get install wget
+       then ``wget`` isn't installed on your computer. It *should* come 
+       pre-installed for most distributions of Linux, but if it is not, install it
+       with ::
+            
+           user@machine:~$ sudo apt-get install wget
 
-    This can be repeated for most other common packages that may not be 
-    installed on your machine by default.
+       This can be repeated for most other common packages that may not be 
+       installed on your machine by default.
 
 6. Unpack the tarball by typing::
 
@@ -90,27 +87,27 @@ FFTW website.
 
         user@machine:/usr/local/fftw-3.3.8$ ./configure --enable-float --enable-sse --enable-shared --enable-single --prefix=/usr/local && sudo make install
 
-.. note::
+   .. note::
 
-    If you don't have a C compiler installed on your system by default, you 
-    will likely get this error message when trying to build FFTW::
+       If you don't have a C compiler installed on your system by default, you 
+       will likely get this error message when trying to build FFTW::
 
-        configure: error: no acceptable C compiler found in $PATH
+           configure: error: no acceptable C compiler found in $PATH
 
-    Just as before, install ``gcc`` by doing::
+       Just as before, install ``gcc`` by doing::
         
-        $ sudo apt-get install gcc
+           $ sudo apt-get install gcc
 
-    and pressing enter when prompted. After this, you should be able to run
-    the command in Step 10 to configure FFTW.
+       and pressing enter when prompted. After this, you should be able to run
+       the command in Step 10 to configure FFTW.
 
-If Step 10 runs without any errors, FFTW has been successfully installed. But,
-we're not finished yet---we need to set the environment variable, so your
-system knows where to find FFTW.
+   If this runs without any errors, FFTW has been successfully installed. But,
+   we're not finished yet---we need to set the environment variable, so your
+   system knows where to find FFTW.
 
 11. Use your favorite text editor to open up your ``.bashrc`` file. This is 
     stored in your home directory, ``~/`` (short for ``/home/<your username>``
-    ). Edit this file with::
+    ). Here, I use ``gedit`` to open this file with::
 
        user@machine:~$ gedit ~/.bashrc
 
@@ -124,10 +121,8 @@ system knows where to find FFTW.
 PGPLOT
 ------
 
-Generally, these steps will follow the instructions found 
-`here <https://guaix.fis.ucm.es/~ncl/howto/howto-pgplot>`_. We will be 
-installing PGPLOT from source, so first we need to make sure we have
-a Fortran compiler and X11 (both required to compile pgplot).
+Thankfully, we don't have to install PGPLOT from source. We will use the Ubuntu
+packages.
 
 1. Update the package lists, then install xorg-dev and gfortran::
 
@@ -135,7 +130,7 @@ a Fortran compiler and X11 (both required to compile pgplot).
     $ sudo apt-get install xorg-dev
     $ sudo apt-get install gfortran
 
-.. note ::
+   .. note ::
 
     To make sure our Fortran compiler installed correctly, try::
         
@@ -148,94 +143,33 @@ a Fortran compiler and X11 (both required to compile pgplot).
 
     then ``gfortran`` has successfully installed.
 
-2. Download the PGPLOT tarball, found here: 
-   `pgplot5.2.tar.gz <ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz>`_
+2. Manually add the apt repository that contains pgplot5 for Ubuntu::
 
-   ::
+    $ sudo gedit /etc/apt/sources.list
 
-    $ cd ~
-    $ wget ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz
-    $ cd /usr/local/src
-    $ sudo mv ~/pgplot5.2.tar.gz ./
-    $ sudo tar -zxvf pgplot5.2.tar.gz
-    $ sudo rm pgplot5.2.tar.gz
+   Add "multiverse" to the end of each of the lines below. The finished 
+   result should contain *at least*::
 
-3. Now that we've downloaded, extracted, and then removed the tarball, we can
-   actually build PGPLOT. However, we're going to make a different directory
-   in which to build it.
+    deb http://archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse
+    deb http://security.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse
+    deb http://archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse
 
-   ::
+   There may be a better way to do this, but it works!
 
-    $ sudo mkdir /usr/local/pgplot
-    $ cd /usr/local/pgplot
+2. Install pgplot5::
 
-4. Copy the list of drivers from the downloaded directory to our installation
-   directory, and edit it to remove the exclamation marks in front of the lines
-   that contain /PS, /VPS, /CPS, /VCPS, and /XServe. These identifiers can be
-   found under the "Code" column.
+    $ sudo apt-get install pgplot5
 
-   ::
-
-    $ sudo cp /usr/local/src/pgplot/drivers.list .
-    $ sudo gedit drivers.list
-
-   Then uncomment the lines for /PS, /VPS, /CPS, /VCPS, and /XServe.
-
-5. Now, we can create the makefile. Change directories to the installation 
-   directory (``/usr/local/pgplot``) and tell the source to build the necessary
-   files.
-
-   ::
-
-    $ cd /usr/local/pgplot
-    $ sudo /usr/local/src/pgplot/makemake /usr/local/src/pgplot linux g77_gcc_aout
-    $ ls
-
-   You should see a newly created ``makefile`` in the current directory, along 
-   some other files. We need to edit the ``makefile`` to make sure it uses the
-   compiler we want it to when building: gfortran.
-
-6. Edit the makefile so that the default Fortran compiler is set to gfortran.
-
-   ::
-
-    $ sudo gedit makefile
-
-   and change the line 
-
-   ::
-
-    FCOMPL=g77
-
-   to
-
-   ::
-
-    FCOMPL=gfortran
-
-7. Compile the source files.
-
-   ::
-
-    $ sudo make
-    $ sudo make cpg
-    $ sudo make clean
-    $ ls
-
-   Now you should see a bunch of PGPLOT demo files, if all went well. We 
-   still need to set the environment variables so your system knows where to find
-   PGPLOT.
-
-8. Set environment variables for PGPLOT. Add the following lines to the same
+3. Set environment variables for PGPLOT. Insert the following lines in the same
    ``.bashrc`` file as before, under the FFTW environment variable.
 
    ::
 
     $ gedit ~/.bashrc
 
-   And add these lines::
+   Insert these lines::
 
-        export PGPLOT_DIR='/usr/local/pgplot'
+        export PGPLOT_DIR='/usr/lib/pgplot5'
         export PGPLOT_DEV='/Xserve'
 
    Then, source your ``.bashrc`` file to make sure the updates are loaded into
@@ -244,16 +178,6 @@ a Fortran compiler and X11 (both required to compile pgplot).
    ::
 
     $ source ~/.bashrc
-
-9. To ensure PGPLOT is working properly, we can run one of the demos. Run this
-   command from any directory in your machine::
-
-    $ /usr/local/pgplot/pgdemo1
-
-   and you should see a lovely ``y = x^2`` graph. Click back into your terminal
-   and press ``<RETURN>`` to cycle through all the pages. When you're done, you
-   can close out of the tiny "PGPLOT Server" window that shows up whenever you
-   run PGPLOT.
 
 
 TEMPO
@@ -272,7 +196,7 @@ and build it.
    Once it clones, we can start following the installation instructions in the 
    README file.
 
-.. note ::
+   .. note ::
 
     You may need to install ``git``, if it is not already present on your 
     system. Do::
@@ -300,7 +224,7 @@ and build it.
     $ sudo apt-get install autoconf
 
 
-3. Now, when we run ``prepare``, our system will be able to use ``csh`` as 
+4. Now, when we run ``prepare``, our system will be able to use ``csh`` as 
    specified in the script. From the ``~/tempo`` directory, do::
 
     $ ./prepare
@@ -308,7 +232,7 @@ and build it.
     $ sudo make
     $ sudo make install
 
-4. Don't forget to set the TEMPO environment variable!
+5. Don't forget to set the TEMPO environment variable!
 
    ::
 
@@ -322,7 +246,7 @@ and build it.
 
     export TEMPO='/home/<your username>/tempo'
 
-.. note ::
+   .. note ::
 
     This variable will be different if you installed TEMPO somewhere other than 
     your home directory. Navigate to the recently installed ``tempo`` directory
@@ -385,7 +309,7 @@ Here we install CFITSIO from source (website: https://heasarc.gsfc.nasa.gov/fits
 
     $ gedit ~/.bashrc
 
-   and add this line::
+   Insert this line::
 
     export CFITSIO_DIR='/home/<your username>/cfitsio-3.47'
 
@@ -411,7 +335,7 @@ Finally, we can install PRESTO. First, clone the repository to
 
         $ gedit ~/.bashrc
 
-   and add the following line to the end::
+   and add the following lines to the end (**NOTE:** Don't forget to replace <your username> in the second line)::
 
         export PRESTO='/usr/local/presto'
         export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/include:/usr/local/fftw-3.3.8:/usr/share/glib-2.0:/home/<your username>/cfitsio-3.47:/usr/local/presto/include"
@@ -419,24 +343,28 @@ Finally, we can install PRESTO. First, clone the repository to
         export PYTHONPATH="/usr/local/presto/lib/python"
         export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/presto/lib"
 
-   replacing the appropriate fields in the second line with wherever your 
+   replacing the appropriate fields with wherever your 
    package installations are located.
 
-.. note ::
+   .. note ::
 
     If the ``PATH`` and ``PYTHONPATH`` environment variables already exist, 
     simply add on to them, separating new additions with a colon. For example::
 
-        export PATH="/home/<user>/anaconda3/bin:$PATH"
+        export PATH="/home/<your username>/anaconda3/bin:$PATH"
 
-    becomes
+    becomes::
 
         export PATH="/home/<user>/anaconda3/bin:/usr/local/presto/bin:$PATH"
 
+   Likewise, if you install PRESTO *before* installing Anaconda Python or 
+   similar, you will need to add the Python environment variables to the 
+   existing PATH and PYTHONPATH in order for your Python installation to work.
+
 3. For some reason, even after setting the environment variables, the Makefile 
-   can have trouble setting its PRESTO path. A temporary patch for this is to 
-   add the PRESTO and PGPLOT paths to the Makefile manually. Open up the 
-   Makefile::
+   can have trouble setting its PRESTO and PGPLOT paths. A temporary patch for 
+   this is to add the PRESTO and PGPLOT paths to the Makefile manually. Open up
+   the Makefile::
 
     $ cd /usr/local/presto/src
     $ sudo gedit Makefile
@@ -447,7 +375,7 @@ Finally, we can install PRESTO. First, clone the repository to
 
    And, right above ``PGPLOTLINK``, insert this line::
 
-    PGPLOT_DIR = /usr/local/pgplot
+    PGPLOT_DIR = /usr/lib/pgplot5
 
 4. After the fix in the previous step, we can run ``make makewisdom`` to get
    FFTW "acquainted" with our machine. We'll need super user privileges for 
@@ -479,3 +407,65 @@ Finally, we can install PRESTO. First, clone the repository to
 7. Build PRESTO::
 
     $ sudo make
+
+8. Try this::
+
+    $ exploredat
+
+   If you get something like::
+
+    usage:  exploredat datafilename
+
+   then PRESTO has been installed successfully!
+
+
+PRESTOport
+----------
+
+This analysis tool is used to format certain types of light curves for analysis
+in PRESTO. We can run a simple test to make sure that PRESTO is working
+properly. First, we clone PRESTOport.
+
+1. Clone PRESTOport::
+
+    $ git clone https://github.com/mccbc/PRESTOport.git
+
+2. cd into the PRESTOport main directory and run ``example.py``. This script 
+   contains a lot of documentation about how to use PRESTOport, so it's 
+   highly recommended to look through it to understand how each of the commands
+   are used.
+
+    $ cd PRESTOport/
+    $ python example.py
+
+   .. note ::
+
+        If you get any Python errors here, you may still be missing required
+        packages in your Python installation. Install the packages mentioned in
+        the error messages until the program runs successfully (these should be
+        numpy, matplotlib, scipy, etc.)
+
+3. Check out the example directory, where the output ``.dat`` and ``.inf`` 
+   files should be generated from example light curves::
+
+    $ cd example/
+    $ ls
+
+4. Moment of truth! Run an FFT on one of the output files::
+
+    $ realfft 404850274.dat
+
+5. If this runs successfully, try examining the FFT with ``explorefft``::
+
+    $ explorefft 404850274.fft
+
+   An interactive PGPLOT window should show up. Use the reference sheet printed
+   in the terminal window to navigate around the plot and close it when you're
+   finished.
+
+6. You're done! Check out Scott Ransom's `pulsar finding tutorial <https://www.cv.nrao.edu/~sransom/PRESTO_search_tutorial.pdf>`_ for more info 
+   about how to use PRESTO. 
+
+   (A PRESTO guide for EvryScope and TESS light curves is coming
+   soon. When I write it up, I'll be sure to link it here - CM, 30 Jul 2019)
+
