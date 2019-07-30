@@ -46,9 +46,8 @@ FFTW website.
 
 4. Open a terminal window. To make sure you're in your home directory, type 
    ``cd`` and press enter
-5. Use ``wget`` to download the tarball. Type:
 
-    ::
+5. Use ``wget`` to download the tarball. Type::
 
         user@machine:~$ wget http://www.fftw.org/fftw-3.3.8.tar.gz
 
@@ -132,7 +131,7 @@ packages.
     $ sudo apt-get install xorg-dev
     $ sudo apt-get install gfortran
 
-   .. note ::
+   .. note::
 
     To make sure our Fortran compiler installed correctly, try::
         
@@ -198,7 +197,7 @@ and build it.
    Once it clones, we can start following the installation instructions in the 
    README file.
 
-   .. note ::
+   .. note::
 
     You may need to install ``git``, if it is not already present on your 
     system. Do::
@@ -248,7 +247,7 @@ and build it.
 
     export TEMPO='/home/<your username>/tempo'
 
-   .. note ::
+   .. note::
 
     This variable will be different if you installed TEMPO somewhere other than 
     your home directory. Navigate to the recently installed ``tempo`` directory
@@ -348,7 +347,7 @@ Finally, we can install PRESTO. First, clone the repository to
    replacing the appropriate fields with wherever your 
    package installations are located.
 
-   .. note ::
+   .. note::
 
     If the ``PATH`` and ``PYTHONPATH`` environment variables already exist, 
     simply add on to them, separating new additions with a colon. For example::
@@ -440,7 +439,7 @@ properly. First, we clone PRESTOport.
     $ cd PRESTOport/
     $ python example.py
 
-   .. note ::
+   .. note::
 
         If you get any Python errors here, you may still be missing required
         packages in your Python installation. Install the packages mentioned in
