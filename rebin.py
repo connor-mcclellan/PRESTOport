@@ -166,7 +166,7 @@ def rebin(timeseries, binwidth=None, exptime=None, timestamp_position=0.5,
         flux = np.append(flux, (endbins[-1]-endtimes[-1])*median_flux/exptime)
 
     elif gapfill_method == 2:
-        flux = np.append(flux, flux[-1])
+        flux = np.append(flux, (endbins[-1]-endtimes[-1])*flux[-1]/exptime)
     
     starttimes = np.append(starttimes, endtimes[-1])
     endtimes = np.append(endtimes, endbins[-1])
