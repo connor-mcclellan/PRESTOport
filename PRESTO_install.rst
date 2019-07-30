@@ -1,3 +1,5 @@
+Author: B. Connor McClellan, 2019
+
 Introduction
 ************
     
