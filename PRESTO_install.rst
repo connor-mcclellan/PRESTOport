@@ -434,7 +434,7 @@ properly. First, we clone PRESTOport.
 2. cd into the PRESTOport main directory and run ``example.py``. This script 
    contains a lot of documentation about how to use PRESTOport, so it's 
    highly recommended to look through it to understand how each of the commands
-   are used.
+   are used::
 
     $ cd PRESTOport/
     $ python example.py
