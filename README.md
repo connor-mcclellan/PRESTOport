@@ -1,7 +1,7 @@
 # PRESTOport
 Currently supported telescopes are: TESS
 
-PRESTOport is a software package written in Python that reduces light curves from EvryScope and TESS, to port them to PRESTO for analysis. To use PRESTOport, clone the repository from its GitHub page (below) and take a look at example.py, which is effectively a tutorial for getting started in lieu of more formal documentation. Sample light curves from TESS are included to practice with. These are in the examples/ sub-directory.
+PRESTOport is a software package written in Python that reduces light curves from EvryScope and TESS, to port them to PRESTO for analysis. To use PRESTOport, clone the repository and take a look at example.py, which is effectively a tutorial for getting started in lieu of more formal documentation. Sample light curves from TESS are included to practice with. These are in the examples/ sub-directory.
 
 PRESTOport's functionality includes:
  * Removing bad data based on TESS quality flags
